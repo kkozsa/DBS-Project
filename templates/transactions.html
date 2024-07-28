@@ -63,23 +63,5 @@
         <!-- Core theme JS-->
         <script src="static/js/scripts.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-        <script>                                                                // Menu toggle
-            window.addEventListener('DOMContentLoaded', event => {
-                // Toggle the side navigation
-                const sidebarToggle = document.body.querySelector('#sidebarToggle');
-                if (sidebarToggle) {
-                    // Uncomment Below to persist sidebar toggle between refreshes
-                    // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
-                    //     document.body.classList.toggle('sb-sidenav-toggled');
-                    // }
-                    sidebarToggle.addEventListener('click', event => {
-                        event.preventDefault();
-                        document.body.classList.toggle('sb-sidenav-toggled');
-                        localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
-                    });
-                }
-            });
-        </script>
     </body>
 </html>

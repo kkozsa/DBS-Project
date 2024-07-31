@@ -1,8 +1,9 @@
 import yfinance as yf
 import mysql.connector
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
+app.secret_key = b'11223344'
 
                                                         # Database config
 mysql_host = 'localhost'
@@ -35,6 +36,7 @@ def login():
         cursor.close()
 
         if user and user[3] == password:  # Assuming password is the 4th field
+            session['email'] = email  # Store user's email in session
             return redirect(url_for('portfolio'))
         else:
             return "Invalid credentials"
@@ -51,7 +53,8 @@ def transactions():
 
 @app.route('/logout')
 def logout():
-    return render_template('logout.html')
+    session.clear()                         # Clear the session to remove user data
+    return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -82,7 +85,17 @@ def register():
 
 @app.route('/profile')
 def profile():
-    return render_template('profile.html')
+    email = session.get('email')  # Retrieve user's email from session
+    return render_template('profile.html', email=email)
+
+
+@app.route('/get_stock_data', methods=['POST'])
+def get_stock_data():
+    ticker = request.json['ticker']
+    data = yf.Ticker(ticker).history(period='1y')
+    return jsonify({'currentPrice': data.iloc[-1].Close,
+                    'openPrice': data.iloc[-1].Open})
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

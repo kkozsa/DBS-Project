@@ -83,10 +83,52 @@ def register():
 
     return render_template('register.html')
 
-@app.route('/profile')
+from datetime import datetime
+
+@app.route('/profile', methods=['GET', 'POST'])
 def profile():
-    email = session.get('email')  # Retrieve user's email from session
-    return render_template('profile.html', email=email)
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    email = session['email']
+    
+    if request.method == 'POST':
+        full_name = request.form['full_name']
+        date_of_birth = request.form['date_of_birth']
+        phone_number = request.form['phone_number']
+        address = request.form['address']
+
+        cursor = mysql_conn.cursor()
+        cursor.execute("""
+            UPDATE users SET full_name = %s, date_of_birth = %s, phone_number = %s, address = %s
+            WHERE email = %s
+        """, (full_name, date_of_birth, phone_number, address, email))
+        mysql_conn.commit()
+        cursor.close()
+
+        return redirect(url_for('profile'))
+    
+    cursor = mysql_conn.cursor()
+    cursor.execute("SELECT full_name, date_of_birth, phone_number, address FROM users WHERE email = %s", (email,))
+    user_details = cursor.fetchone()
+    cursor.close()
+
+    # Format date_of_birth to YYYY-MM-DD if it exists
+    if user_details[1]:
+        date_of_birth = user_details[1].strftime('%Y-%m-%d')
+    else:
+        date_of_birth = ""
+
+    user = {
+        'full_name': user_details[0],
+        'date_of_birth': date_of_birth,
+        'phone_number': user_details[2],
+        'address': user_details[3]
+    }
+
+    return render_template('profile.html', user=user)
+
+
 
 
 @app.route('/get_stock_data', methods=['POST'])

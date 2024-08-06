@@ -53,6 +53,11 @@
   flex-wrap: wrap;
 }
 
+#tickers-grid2 {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .stock-box {
   width: 200px;
   height: 200px;

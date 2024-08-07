@@ -1,10 +1,3 @@
-/*!
-* Start Bootstrap - Simple Sidebar v6.0.6 (https://startbootstrap.com/template/simple-sidebar)
-* Copyright 2013-2023 Start Bootstrap
-* Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-simple-sidebar/blob/master/LICENSE)
-*/
-
-
 // Toggle the side navigation
 
 window.addEventListener('DOMContentLoaded', event => {    
@@ -17,8 +10,9 @@ window.addEventListener('DOMContentLoaded', event => {
         });
     }
 });
+// reference: Start Bootstrap - Simple Sidebar v6.0.6 (https://startbootstrap.com/template/simple-sidebar)
+// Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
 
-//var tickers = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'INTC', 'PLTR', 'WCBR', 'SPY', 'ETH-USD', 'BTC-USD'];  // Array of stocks
 
 
 // Update prices every minute
@@ -141,7 +135,7 @@ function addTickerToGrid(ticker) {
 
 function addTickerToGrid2(ticker) {
     $('#tickers-grid2').append(`<div id="${ticker}" class="stock-box"><h2>${ticker}</h2><p id="${ticker}-price"></p><p id="${ticker}-pct"></p><button class="remove-btn" data-ticker="${ticker}">Remove</button></div>`)
-}
+}                                                           // Same as above + remove button
 
 
 // Send AJAX request to fetch stock data for tickers. Update price change
@@ -177,3 +171,4 @@ function updatePrices() {
         })
     })
 }
+// reference: NeuralNine - Real-Time Stock Price Tracker in Python https://youtu.be/GSHFzqqPq5U?list=PLF6w5cpj_zBo6dTD4avNwz1xbqYRiKBsN

@@ -172,3 +172,94 @@ function updatePrices() {
     })
 }
 // reference: NeuralNine - Real-Time Stock Price Tracker in Python https://youtu.be/GSHFzqqPq5U?list=PLF6w5cpj_zBo6dTD4avNwz1xbqYRiKBsN
+
+// Function to add a new transaction
+$('#add-transaction-form').submit(function (e) {
+    e.preventDefault();
+    var ticker = $('#ticker').val().toUpperCase();
+    var purchaseDate = $('#purchase-date').val();
+    var amount = $('#amount').val();
+
+    fetch('/add_transaction', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ticker: ticker, purchase_date: purchaseDate, amount: amount})
+    })
+    .then(data => data.json())
+    .then(data => {
+        if (data.result === 'success') {
+            addTransactionToTable(ticker, purchaseDate, amount);
+            $('#ticker').val('');
+            $('#purchase-date').val('');
+            $('#amount').val('');
+        } else {
+            alert('Failed to add transaction');
+        }
+    })
+    .catch(() => alert('Failed to add transaction'));
+});
+
+// Function to add a transaction to the table
+function addTransactionToTable(ticker, purchaseDate, amount, value) {
+    $('#transaction-list').append(`
+        <tr>
+            <td>${ticker}</td>
+            <td>${purchaseDate}</td>
+            <td>${amount}</td>
+            <td>${value.toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm remove-transaction-btn">Remove</button></td>
+        </tr>
+    `);
+}
+
+// Fetch and display transactions on page load
+$(document).ready(function () {
+    fetch('/get_transactions')
+    .then(data => data.json())
+    .then(transactions => {
+        // Clear the transaction list before appending new transactions             AVOID DOUBLE DATA
+        $('#transaction-list').empty();
+        
+        transactions.forEach(function (transaction) {
+            addTransactionToTable(transaction.ticker, transaction.purchase_date, transaction.amount);
+        });
+    });
+});
+
+
+// Fetch and display transactions and total portfolio value on page load
+$(document).ready(function () {
+    // Fetch transactions
+    fetch('/get_transactions')
+        .then(response => response.json())
+        .then(transactions => {
+            $('#transaction-list').empty(); // Clear existing rows
+            let totalPortfolioValue = 0;    // Initialize total value
+
+            // Create a promise array for stock data fetches
+            let promises = transactions.map(transaction => {
+                return $.ajax({
+                    url: '/get_stock_data',
+                    type: 'POST',
+                    data: JSON.stringify({ 'ticker': transaction.ticker }),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json'
+                }).then(data => {
+                    var currentPrice = data.currentPrice;
+                    var value = transaction.amount * currentPrice;
+                    totalPortfolioValue += value;  // Add to total value
+
+                    // Add transaction to table
+                    addTransactionToTable(transaction.ticker, transaction.purchase_date, transaction.amount, value);
+                });
+            });
+
+            // After all data is fetched and processed
+            Promise.all(promises).then(() => {
+                $('#portfolio-value').text(`$${totalPortfolioValue.toFixed(2)}`);
+            });
+        });
+});

@@ -235,6 +235,50 @@ def get_stock_data():
                     'openPrice': data.iloc[-1].Open})
 # reference: NeuralNine - Real-Time Stock Price Tracker in Python https://youtu.be/GSHFzqqPq5U?list=PLF6w5cpj_zBo6dTD4avNwz1xbqYRiKBsN
 
+
+# Add transaction route
+@app.route('/add_transaction', methods=['POST'])
+def add_transaction():
+    if 'email' not in session:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    email = session['email']
+    content = request.json
+    ticker = content.get('ticker')
+    purchase_date = content.get('purchase_date')
+    amount = content.get('amount')
+
+    cursor = mysql_conn.cursor()
+    cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
+    userid = cursor.fetchone()[0]
+
+    cursor.execute("INSERT INTO transactions (userid, ticker, purchase_date, amount) VALUES (%s, %s, %s, %s)", (userid, ticker, purchase_date, amount))
+    mysql_conn.commit()
+    cursor.close()
+
+    return jsonify({'result': 'success'})
+
+
+# Get transactions route
+@app.route('/get_transactions', methods=['GET'])
+def get_transactions():
+    if 'email' not in session:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    email = session['email']
+    cursor = mysql_conn.cursor()
+    cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
+    userid = cursor.fetchone()[0]
+
+    cursor.execute("SELECT ticker, purchase_date, amount FROM transactions WHERE userid = %s", (userid,))
+    transactions = cursor.fetchall()
+    cursor.close()
+
+    result = [{'ticker': t[0], 'purchase_date': t[1].strftime('%Y-%m-%d'), 'amount': t[2]} for t in transactions]
+    return jsonify(result)
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 

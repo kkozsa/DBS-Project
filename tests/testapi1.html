@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSLA Stock test</title>
+</head>
+<body>
+    <h1>TSLA Stock test</h1>
+    <div id="priceDisplay"></div>
+
+    <script>
+        async function fetchStockPrice() {          // Asynchronous function, (other code can continue to run while waiting for tasks to complete.)
+            var apiKey = '5DTZ0ZUBPZ5NFZU1';        // API_KEY.
+            var ticker = 'TSLA';                    // Stock symbol.
+
+            try {
+                // Fetch data
+                var response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${apiKey}`);    // await to wait for the response asynchronously
+
+                if (!response.ok) {                 // If response is not ok.
+                    throw new Error(`Failed to fetch data: ${response.status} - ${response.statusText}`);
+                }
+
+                var data = await response.json();   // Json data assigned to data variable.
+
+                if (data['Global Quote'] && data['Global Quote']['05. price']) {            // If global quote and price received, price displayed in priceDisplay div.
+                    var price = parseFloat(data['Global Quote']['05. price']);
+                    document.getElementById('priceDisplay').innerText = `Tesla Stock Price: $${price.toFixed(2)}`;
+                } else {                                                                    // If not, show error.
+                    throw new Error(`Failed to retrieve price data for TSLA.`);
+                }
+            } catch (error) {                                                               // If there is an error in the try block, 
+                console.error('Error:', error);                                             // shown in console.
+                document.getElementById('priceDisplay').innerText = 'Error: ' + error.message;  // Error message displayed in priceDisplay too.
+            }
+        }
+
+        fetchStockPrice();             // Function call to fetch TSLA stock price when the page loads.
+    </script>
+</body>
+</html>

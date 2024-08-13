@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSLA Stock test</title>
+</head>
+<body>
+    <h1>TSLA Stock test</h1>
+    <div id="priceDisplay"></div>
+
+    <script>
+
+        async function fetchTeslaStockPrice() {           // Asynchronous function, (other code can continue to run while waiting for tasks to complete.)
+            var apiKey = 'FFtA0PvwR8YgNDeHJsuUdtpAnBwe3YZq';                                                            // API key.
+            var url = 'https://api.polygon.io/v2/aggs/ticker/TSLA/prev?unadjusted=true&apiKey=' + apiKey;               // Stock symbol.
+
+            var xhr = new XMLHttpRequest();             // xhr object
+            xhr.open('GET', url);                       // get request to the specific url
+
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    var response = JSON.parse(xhr.responseText);        // response object 
+                    var price = response.results[0].c;      // Closing price display
+                    document.getElementById('priceDisplay').innerHTML = 'Tesla Stock Price: $' + price;
+                } else {
+                    console.error('Failed to fetch Tesla stock price. Status code: ' + xhr.status);
+                }
+            };
+
+            xhr.onerror = function() {
+                console.error('Failed to fetch Tesla stock price.');
+            };
+
+            xhr.send();
+        }
+
+        fetchTeslaStockPrice();             // Function call to fetch TSLA stock price when the page loads.
+    </script>
+</body>
+</html>

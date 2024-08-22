@@ -176,11 +176,11 @@ function updatePrices() {
 // Function to add a new transaction
 $('#add-transaction-form').submit(function (e) {
     e.preventDefault();
-    var ticker = $('#ticker').val().toUpperCase();
+    var ticker = $('#ticker').val().toUpperCase();          // Extracting data
     var purchaseDate = $('#purchase-date').val();
     var amount = $('#amount').val();
 
-    fetch('/add_transaction', {
+    fetch('/add_transaction', {                             // Sending data to server
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -188,7 +188,7 @@ $('#add-transaction-form').submit(function (e) {
         },
         body: JSON.stringify({ticker: ticker, purchase_date: purchaseDate, amount: amount})
     })
-    .then(data => data.json())
+    .then(data => data.json())                      // Server response
     .then(data => {
         if (data.result === 'success') {
             addTransactionToTable(ticker, purchaseDate, amount);

@@ -148,8 +148,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-# Register route (Register details to database)
-
+# Register details to database
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':                    # User submits register form

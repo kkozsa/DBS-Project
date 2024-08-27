@@ -99,15 +99,23 @@ def portfolio():
 @app.route('/tickers', methods=['GET'])                                                 
 def tickers():
     email = session['email']
+    
+    # Reconnect logic in case the connection has been lost
+    if not mysql_conn.is_connected():
+        mysql_conn.reconnect(attempts=3, delay=5)
+
     cursor = mysql_conn.cursor()
     cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
     userid = cursor.fetchone()[0]  
 
+    cursor.close()  # Close the first cursor
+
     cursor = mysql_conn.cursor()
     cursor.execute("SELECT ticker FROM user_portfolio WHERE userid = %s", (userid,))
     user_tickers = cursor.fetchall()
-    cursor.close()
-    whatever = {'tickers': list(map (lambda x:x[0],user_tickers))}
+    cursor.close()  # Close the second cursor
+    
+    whatever = {'tickers': [ticker[0] for ticker in user_tickers]}
     return jsonify(whatever)
 
 
@@ -148,7 +156,8 @@ def logout():
     return redirect(url_for('login'))
 
 
-# Register details to database
+# Register route (Register details to database)
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':                    # User submits register form
@@ -265,13 +274,20 @@ def get_transactions():
         return jsonify({'error': 'Unauthorized'}), 403
 
     email = session['email']
+    
+    if not mysql_conn.is_connected():
+        mysql_conn.reconnect(attempts=3, delay=5)
+
     cursor = mysql_conn.cursor()
     cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
     userid = cursor.fetchone()[0]
 
+    cursor.close()  # Close the first cursor
+
+    cursor = mysql_conn.cursor()
     cursor.execute("SELECT ticker, purchase_date, amount FROM transactions WHERE userid = %s", (userid,))
     transactions = cursor.fetchall()
-    cursor.close()
+    cursor.close()  # Close the second cursor
 
     result = [{'ticker': t[0], 'purchase_date': t[1].strftime('%Y-%m-%d'), 'amount': t[2]} for t in transactions]
     return jsonify(result)

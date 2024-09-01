@@ -44,6 +44,17 @@ $(document).ready(function () {
 
 // Portfolio page
 $(document).ready(function () {             
+    // Fetch total amounts and values of stocks
+    fetch('/get_total_amounts_and_values')
+        .then(response => response.json())
+        .then(data => {
+            let totalStocksDiv = $('#total-stocks');
+            totalStocksDiv.empty();
+            data.total_stock_values.forEach(function (stock) {
+                totalStocksDiv.append(`<div><h4>${stock.ticker}: ${stock.total_amount} shares - Total Value: $${stock.total_value.toFixed(2)}</h4></div>`);
+            });
+        });
+
     fetch('/tickers')
         .then(response => response.json())
         .then(data => data['tickers'])
@@ -191,7 +202,6 @@ $('#add-transaction-form').submit(function (e) {
 
 // Function to add a transaction to the table
 function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
-                                                                            
     if ($(`#transaction-list tr:contains(${ticker})`).length === 0) {  // DOUBLE TRANSACTION FIX Check if transaction already exists in the table before adding
         $('#transaction-list').append(`
             <tr>

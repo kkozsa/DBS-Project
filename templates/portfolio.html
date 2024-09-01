@@ -1,76 +1,108 @@
-<!--reference: Start Bootstrap - Simple Sidebar v6.0.6 (https://startbootstrap.com/template/simple-sidebar)
-    Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)--> 
-    <!DOCTYPE html>
-    <html lang="en">
-        <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-            <meta name="description" content="" />
-            <meta name="author" content="" />
-            <title>S&C Portfolio - Portfolio</title>
-            
-            <link rel="icon" type="image/x-icon" href="static/favicon.ico" />              
-            <link href="../static/css/styles.css" rel="stylesheet" />
-            
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-            <script src="static/js/scripts.js"></script>
-    
-            <script>
-                var tickers = [];                                       // Define an empty array for tickers
-            </script>
-        </head>
-    <body>
-        <div class="d-flex" id="wrapper">
-            <!-- Sidebar and page content wrapper -->
-            <div id="sidebar-wrapper">
-                <div class="sidebar-heading border-bottom bg-light">S&C Portfolio</div>
-                <div class="list-group list-group-flush">
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/">Home</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="login">Login / Register</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/profile">Profile</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="portfolio">Portfolio</a>                   
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="transactions">Transactions</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="logout">Logout</a>
-                </div>
-            </div>
-            <div id="page-content-wrapper">
-                <!-- Top navigation-->
-                <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-                    <div class="container-fluid">
-                        <button class="btn btn-primary" id="sidebarToggle">Menu</button>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                                <li class="nav-item Profilke">
-                                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Profile</a>
-                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                        <a class="dropdown-item" href="#!">Your profile</a>
-                                        <a class="dropdown-item" href="#!">Settings</a>                                     
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </nav>
-                <!-- Form to add a new ticker manually -->
-                <div class="col-md-6 offset-md-3"></div>
-                    <h2>Your tickers</h2>
-                    <form id="add-ticker-form2">
-                        <input type="text" id="new-ticker2" name="ticker" placeholder="Add ticker" required>
-                        <button type="submit">Add</button>
-                    </form>
-                    <!-- Top navigation and page content -->
-                    <div class="container-fluid">
-                        <div id="tickers-grid2">
-                            <!-- Existing tickers will be displayed here -->
-                        </div>
-                                    
+<!-- reference: Start Bootstrap - Simple Sidebar v6.0.6 (https://startbootstrap.com/template/simple-sidebar)
+     Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) -->
+     <!DOCTYPE html>
+     <html lang="en">
+     <head>
+         <meta charset="utf-8" />
+         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+         <meta name="description" content="" />
+         <meta name="author" content="" />
+         <title>S&C Portfolio - Portfolio</title>
+         
+         <link rel="icon" type="image/x-icon" href="static/favicon.ico" />              
+         <link href="../static/css/styles.css" rel="stylesheet" />
+         
+         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+         <script src="static/js/scripts.js"></script>
+     
+         <script>
+             var tickers = [];  <!-- Define an empty array for tickers -->
+         </script>
+     </head>
+     <body>
+         <div class="d-flex" id="wrapper">
+             <!-- Sidebar and page content wrapper -->
+             <div id="sidebar-wrapper">
+                 <div class="sidebar-heading border-bottom bg-light">S&C Portfolio</div>
+                 <div class="list-group list-group-flush">
+                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/">Home</a>
+                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="login">Login / Register</a>
+                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/profile">Profile</a>
+                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="portfolio">Portfolio</a>                   
+                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="transactions">Transactions</a>
+                     <a class="list-group-item list-group-item-action list-group-item-light p-3" href="logout">Logout</a>
+                 </div>
+             </div>
+             <div id="page-content-wrapper">
+                 <!-- Top navigation-->
+                 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                     <div class="container-fluid">
+                         <button class="btn btn-primary" id="sidebarToggle">Menu</button>
+                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                             <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                                 <li class="nav-item Profilke">
+                                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Profile</a>
+                                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                         <a class="dropdown-item" href="#!">Your profile</a>
+                                         <a class="dropdown-item" href="#!">Settings</a>                                     
+                                     </div>
+                                 </li>
+                             </ul>
+                         </div>
+                     </div>
+                 </nav>
+                 
+                 <!-- Total Portfolio Value -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h2 class="text-center">Portfolio Value: <span id="portfolio-value">$0.00</span></h2>
                     </div>
                 </div>
-        </div>
-        <!-- Bootstrap and JavaScript links -->
-        <script id="testscript"></script>
-    </body>
-    </html>
-    
+                <br>
+
+                 <!-- Total Stocks Section -->
+                 <div class="col-md-6 offset-md-3">
+                    <h2>Total Amount of assets:</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Stock Ticker</th>
+                                <th>Amount</th>
+                                <th>Total Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticker, total_amount, total_value in total_stock_values %}
+                            <tr>
+                                <td>{{ ticker }}</td>
+                                <td>{{ total_amount }}</td>
+                                <td>${{ total_value | round(2) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+     
+                 <!-- Form to add a new ticker manually -->
+                 <div class="col-md-12">
+                     <h2>Your watchlist:</h2>
+                     <form id="add-ticker-form2">
+                         <input type="text" id="new-ticker2" name="ticker" placeholder="Add ticker" required>
+                         <button type="submit">Add</button>
+                     </form>
+                     <!-- Top navigation and page content -->
+                     <div class="container-fluid">
+                         <div id="tickers-grid2">
+                             <!-- Existing tickers will be displayed here -->
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         <!-- Bootstrap and JavaScript links -->
+         <script id="testscript"></script>
+     </body>
+     </html>
+     

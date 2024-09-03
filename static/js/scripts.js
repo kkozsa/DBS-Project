@@ -178,33 +178,58 @@ $('#add-transaction-form').submit(function (e) {
     var purchaseDate = $('#purchase-date').val();
     var amount = $('#amount').val();
 
-    fetch('/add_transaction', {                     
+    fetch('/get_stock_data', {                     
         method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ ticker: ticker, purchase_date: purchaseDate, amount: amount })
+        body: JSON.stringify({ 'ticker': ticker, 'purchase_date': purchaseDate })
     })
-    .then(response => response.json())                      
+    .then(response => response.json())
     .then(data => {
-        if (data.result === 'success') {
-            addTransactionToTable(ticker, purchaseDate, amount);
-            $('#ticker').val('');
-            $('#purchase-date').val('');
-            $('#amount').val('');
-        } else {
-            alert('Failed to add transaction');
+        if (data.error) {
+            alert('Error fetching stock data: ' + data.error);
+            return;
         }
+
+        var currentPrice = data.currentPrice;
+        var value = currentPrice * amount;
+
+        addTransactionToTable(ticker, purchaseDate, amount, value);
+
+        fetch('/add_transaction', {                     
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'ticker': ticker, 'purchase_date': purchaseDate, 'amount': amount })
+        })
+        .then(response => response.json())                      
+        .then(data => {
+            if (data.result === 'success') {
+                $('#ticker').val('');
+                $('#purchase-date').val('');
+                $('#amount').val('');
+            } else {
+                alert('Failed to add transaction');
+            }
+        })
+        .catch(() => alert('Failed to add transaction'));
     })
-    .catch(() => alert('Failed to add transaction'));
+    .catch(() => alert('Failed to fetch stock data'));
 });
 
 // Function to add a transaction to the table
 function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
-    if ($(`#transaction-list tr:contains(${ticker})`).length === 0) {  // DOUBLE TRANSACTION FIX Check if transaction already exists in the table before adding
+    // Create a unique identifier by combining ticker and purchaseDate
+    var uniqueId = ticker + '-' + purchaseDate;
+
+    // Check if the combination of ticker and purchase date exists
+    if ($(`#transaction-list tr[data-unique-id="${uniqueId}"]`).length === 0) {   // DOUBLE TRANSACTION FIX Check if transaction already exists in the table before adding
         $('#transaction-list').append(`
-            <tr>
+            <tr data-unique-id="${uniqueId}">
                 <td>${ticker}</td>
                 <td>${purchaseDate}</td>
                 <td>${amount}</td>

@@ -1,7 +1,7 @@
 import yfinance as yf
 import mysql.connector
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -230,12 +230,39 @@ def profile():
 # reference: How to get Data from MySQL DB on Python Flask? https://stackoverflow.com/questions/72608413/how-to-get-data-from-mysql-db-on-python-flask
 
 # Get stock data route (Fetch historical stock price using yahoo finance)
+
 @app.route('/get_stock_data', methods=['POST'])
 def get_stock_data():
-    ticker = request.json['ticker']                     # Extract the value ticker from json data
-    data = yf.Ticker(ticker).history(period='1y')               # Check "1y" options later
-    return jsonify({'currentPrice': data.iloc[-1].Close,
-                    'openPrice': data.iloc[-1].Open})
+    content = request.json
+    ticker = content['ticker']
+    purchase_date = content.get('purchase_date')
+
+    if purchase_date:
+        # Convert the purchase_date string to a datetime object
+        purchase_date_obj = datetime.strptime(purchase_date, '%Y-%m-%d')
+
+        # Try to fetch data for the given date, if no data, fetch for the previous available date
+        for _ in range(7):  # Limit to trying the last 7 days to avoid infinite loops
+            data = yf.Ticker(ticker).history(start=purchase_date_obj.strftime('%Y-%m-%d'), end=(purchase_date_obj + timedelta(days=1)).strftime('%Y-%m-%d'))
+            if not data.empty:
+                break
+            # Move to the previous day
+            purchase_date_obj -= timedelta(days=1)
+        else:
+            return jsonify({'error': 'No data found for this date'}), 404
+    else:
+        # Fetch the latest data if no date is provided
+        data = yf.Ticker(ticker).history(period='1d')
+    
+    if data.empty:
+        return jsonify({'error': 'No data found'}), 404
+
+    # Get the closing price for the date
+    closing_price = data['Close'].iloc[0]
+    open_price = data['Open'].iloc[0]
+
+    return jsonify({'currentPrice': closing_price, 'openPrice': open_price})
+
 # reference: NeuralNine - Real-Time Stock Price Tracker in Python https://youtu.be/GSHFzqqPq5U?list=PLF6w5cpj_zBo6dTD4avNwz1xbqYRiKBsN
 
 # Add transaction route
@@ -285,9 +312,6 @@ def get_transactions():
     result = [{'ticker': t[0], 'purchase_date': t[1].strftime('%Y-%m-%d'), 'amount': t[2]} for t in transactions]
     return jsonify(result)
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
-
 @app.route('/get_total_amounts', methods=['GET'])
 def get_total_amounts():
     if 'email' not in session:
@@ -309,3 +333,6 @@ def get_total_amounts():
 
     total_amounts_dict = [{'ticker': row[0], 'total_amount': row[1]} for row in total_amounts]
     return jsonify({'total_amounts': total_amounts_dict})
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')

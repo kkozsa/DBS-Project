@@ -222,7 +222,7 @@ $('#add-transaction-form').submit(function (e) {
 });
 
 // Function to add a transaction to the table
-function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
+function addTransactionToTable(ticker, purchaseDate, amount, unitPrice, value = 0) {
     // Create a unique identifier by combining ticker and purchaseDate
     var uniqueId = ticker + '-' + purchaseDate;
 
@@ -233,7 +233,8 @@ function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
                 <td>${ticker}</td>
                 <td>${purchaseDate}</td>
                 <td>${amount}</td>
-                <td>${value.toFixed(2)}</td>
+                <td>$${unitPrice.toFixed(2)}</td> <!-- Purchase Unit Price -->
+                <td>$${value.toFixed(2)}</td>
                 <td><button class="btn btn-danger btn-sm remove-transaction-btn">Remove</button></td>
             </tr>
         `);
@@ -254,16 +255,16 @@ $(document).ready(function () {
                 return $.ajax({
                     url: '/get_stock_data',
                     type: 'POST',
-                    data: JSON.stringify({ 'ticker': transaction.ticker }),
+                    data: JSON.stringify({ 'ticker': transaction.ticker, 'purchase_date': transaction.purchase_date }), // Fetch stock data for purchase date
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json'
                 }).then(data => {
-                    let currentPrice = data.currentPrice;
-                    let value = transaction.amount * currentPrice;
+                    let unitPrice = data.currentPrice; // Use the historical price as the purchase unit price
+                    let value = transaction.amount * unitPrice;
                     totalPortfolioValue += value;
 
                     // Ensure the transaction is only added once
-                    addTransactionToTable(transaction.ticker, transaction.purchase_date, transaction.amount, value);
+                    addTransactionToTable(transaction.ticker, transaction.purchase_date, transaction.amount, unitPrice, value);
                 });
             });
 

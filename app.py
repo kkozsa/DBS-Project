@@ -293,21 +293,21 @@ def get_transactions():
     if 'email' not in session:
         return jsonify({'error': 'Unauthorized'}), 403
 
-    email = session['email']
-    
+    # Ensure MySQL connection is active
     if not mysql_conn.is_connected():
         mysql_conn.reconnect(attempts=3, delay=5)
 
-    cursor = mysql_conn.cursor()
-    cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
+    # First, fetch the user's ID
+    cursor = mysql_conn.cursor(buffered=True)  # Use a buffered cursor to avoid the unread result issue
+    cursor.execute("SELECT userid FROM users WHERE email = %s", (session['email'],))
     userid = cursor.fetchone()[0]
-
     cursor.close()  # Close the first cursor
 
-    cursor = mysql_conn.cursor()
+    # Now, fetch the transactions for the user
+    cursor = mysql_conn.cursor(buffered=True)
     cursor.execute("SELECT ticker, purchase_date, amount FROM transactions WHERE userid = %s", (userid,))
-    transactions = cursor.fetchall()
-    cursor.close()  # Close the second cursor
+    transactions = cursor.fetchall()  # Fetch all the results so no unread results remain
+    cursor.close()
 
     result = [{'ticker': t[0], 'purchase_date': t[1].strftime('%Y-%m-%d'), 'amount': t[2]} for t in transactions]
     return jsonify(result)

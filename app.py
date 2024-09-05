@@ -51,56 +51,71 @@ def login():
 # Portfolio route
 @app.route('/portfolio', methods=['GET', 'POST'])                   
 def portfolio():
-    if 'email' not in session:                      # Check if the user is logged in
+    if 'email' not in session:  # Check if the user is logged in
         return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        email = session['email']                            # Identify user by email
-        cursor = mysql_conn.cursor()
-        cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
-        userid = cursor.fetchone()[0]                       # userid first column
-        cursor.close()
-        content = request.json
-        ticker = content.get('ticker')                                              # Get ticker from the form
-
-        cursor = mysql_conn.cursor()
-        cursor.execute("INSERT INTO user_portfolio (userid, ticker) VALUES (%s, %s)", (userid, ticker))
-        mysql_conn.commit()
-        cursor.close()
-        return jsonify({"result":"success"})
-
     email = session['email']
+    
+    # Fetch the user's ID
     cursor = mysql_conn.cursor()
     cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
-    userid = cursor.fetchone()[0]  
-
-    # Fetch tickers
-    cursor.execute("SELECT ticker FROM user_portfolio WHERE userid = %s", (userid,))
-    user_tickers = cursor.fetchall()
+    userid = cursor.fetchone()[0]
 
     # Fetch total amounts of each stock from transactions
     cursor.execute("""
-        SELECT ticker, SUM(amount) as total_amount 
+        SELECT ticker, purchase_date, SUM(amount) as total_amount
         FROM transactions 
         WHERE userid = %s 
-        GROUP BY ticker
+        GROUP BY ticker, purchase_date
     """, (userid,))
     total_amounts = cursor.fetchall()
 
-    # Fetch current stock prices using yfinance
     total_stock_values = []
-    for ticker, total_amount in total_amounts:
-        stock_data = yf.Ticker(ticker).history(period='1d')
-        current_price = stock_data['Close'].iloc[-1]
-        total_value = float(current_price) * float(total_amount)  # Convert to float before multiplication
-        total_stock_values.append((ticker, total_amount, total_value))
-    
+
+    for ticker, purchase_date, total_amount in total_amounts:
+        # Convert total_amount to float
+        total_amount = float(total_amount)
+
+        # Ensure purchase_date is in 'YYYY-MM-DD' format
+        purchase_date_str = purchase_date.strftime('%Y-%m-%d')
+
+        # Try to fetch data for the purchase date, move to previous date if no data
+        purchase_date_obj = datetime.strptime(purchase_date_str, '%Y-%m-%d')
+
+        # Try fetching data for the last available trading day if no data on purchase date
+        for _ in range(7):  # Limit to trying the last 7 days to avoid infinite loops
+            stock_data = yf.Ticker(ticker).history(start=purchase_date_obj.strftime('%Y-%m-%d'), end=(purchase_date_obj + timedelta(days=1)).strftime('%Y-%m-%d'))
+            if not stock_data.empty:
+                purchase_price = stock_data['Close'].iloc[0]
+                break
+            purchase_date_obj -= timedelta(days=1)  # Move to the previous day
+        else:
+            # If no data found, set purchase price to 0
+            purchase_price = 0
+
+        # Fetch current stock price for the total value
+        current_stock_data = yf.Ticker(ticker).history(period='1d')
+        current_price = current_stock_data['Close'].iloc[-1]
+
+        # Calculate values
+        invested_value = purchase_price * total_amount
+        total_value = current_price * total_amount
+        profit_loss = total_value - invested_value
+
+        # Append to total_stock_values, including purchase_date
+        total_stock_values.append({
+            'ticker': ticker,
+            'purchase_date': purchase_date_str,  # Add purchase date
+            'total_amount': total_amount,
+            'invested_value': invested_value,
+            'total_value': total_value,
+            'profit_loss': profit_loss
+        })
     cursor.close()
 
     return render_template('portfolio.html', 
-                           userid=userid, 
-                           user_tickers=user_tickers, 
                            total_stock_values=total_stock_values)
+
 
 # Tickers route (tickers to database)
 @app.route('/tickers', methods=['GET'])                                                 

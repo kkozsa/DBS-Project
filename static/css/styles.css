@@ -6,6 +6,21 @@
 
 
 
+#tickers-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.stock-box {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #333;
+  margin: 10px;
+  padding: 10px;
+  transition: background-color 0.5s;
+  background: #eee;
+}
+
 .dark-red {
   color: #880000;
 }
@@ -26,12 +41,14 @@
   color: #006600;
 }
 
-#tickers-grid, #tickers-grid2 {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Responsive columns */
-  gap: 10px; /* Space between items */
-  justify-items: start; /* Align items within each grid cell to the start (left) */
-  justify-content: start; /* Align the grid as a whole to the start (left) */
+#tickers-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#tickers-grid2 {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .stock-box {

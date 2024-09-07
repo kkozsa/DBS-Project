@@ -44,17 +44,6 @@ $(document).ready(function () {
 
 // Portfolio page
 $(document).ready(function () {             
-    // Fetch total amounts and values of stocks
-    fetch('/get_total_amounts_and_values')
-        .then(response => response.json())
-        .then(data => {
-            let totalStocksDiv = $('#total-stocks');
-            totalStocksDiv.empty();
-            data.total_stock_values.forEach(function (stock) {
-                totalStocksDiv.append(`<div><h4>${stock.ticker}: ${stock.total_amount} shares - Total Value: $${stock.total_value.toFixed(2)}</h4></div>`);
-            });
-        });
-
     fetch('/tickers')
         .then(response => response.json())
         .then(data => data['tickers'])
@@ -178,63 +167,38 @@ $('#add-transaction-form').submit(function (e) {
     var purchaseDate = $('#purchase-date').val();
     var amount = $('#amount').val();
 
-    fetch('/get_stock_data', {                     
+    fetch('/add_transaction', {                     
         method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 'ticker': ticker, 'purchase_date': purchaseDate })
+        body: JSON.stringify({ ticker: ticker, purchase_date: purchaseDate, amount: amount })
     })
-    .then(response => response.json())
+    .then(response => response.json())                      
     .then(data => {
-        if (data.error) {
-            alert('Error fetching stock data: ' + data.error);
-            return;
+        if (data.result === 'success') {
+            addTransactionToTable(ticker, purchaseDate, amount);
+            $('#ticker').val('');
+            $('#purchase-date').val('');
+            $('#amount').val('');
+        } else {
+            alert('Failed to add transaction');
         }
-
-        var currentPrice = data.currentPrice;
-        var value = currentPrice * amount;
-
-        addTransactionToTable(ticker, purchaseDate, amount, value);
-
-        fetch('/add_transaction', {                     
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 'ticker': ticker, 'purchase_date': purchaseDate, 'amount': amount })
-        })
-        .then(response => response.json())                      
-        .then(data => {
-            if (data.result === 'success') {
-                $('#ticker').val('');
-                $('#purchase-date').val('');
-                $('#amount').val('');
-            } else {
-                alert('Failed to add transaction');
-            }
-        })
-        .catch(() => alert('Failed to add transaction'));
     })
-    .catch(() => alert('Failed to fetch stock data'));
+    .catch(() => alert('Failed to add transaction'));
 });
 
 // Function to add a transaction to the table
-function addTransactionToTable(ticker, purchaseDate, amount, unitPrice, value = 0) {
-    // Create a unique identifier by combining ticker and purchaseDate
-    var uniqueId = ticker + '-' + purchaseDate;
-
-    // Check if the combination of ticker and purchase date exists
-    if ($(`#transaction-list tr[data-unique-id="${uniqueId}"]`).length === 0) {   // DOUBLE TRANSACTION FIX Check if transaction already exists in the table before adding
+function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
+                                                                            
+    if ($(`#transaction-list tr:contains(${ticker})`).length === 0) {  // DOUBLE TRANSACTION FIX Check if transaction already exists in the table before adding
         $('#transaction-list').append(`
-            <tr data-unique-id="${uniqueId}">
+            <tr>
                 <td>${ticker}</td>
                 <td>${purchaseDate}</td>
                 <td>${amount}</td>
-                <td>$${unitPrice.toFixed(2)}</td> <!-- Purchase Unit Price -->
-                <td>$${value.toFixed(2)}</td>
+                <td>${value.toFixed(2)}</td>
                 <td><button class="btn btn-danger btn-sm remove-transaction-btn">Remove</button></td>
             </tr>
         `);
@@ -255,16 +219,16 @@ $(document).ready(function () {
                 return $.ajax({
                     url: '/get_stock_data',
                     type: 'POST',
-                    data: JSON.stringify({ 'ticker': transaction.ticker, 'purchase_date': transaction.purchase_date }), // Fetch stock data for purchase date
+                    data: JSON.stringify({ 'ticker': transaction.ticker }),
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json'
                 }).then(data => {
-                    let unitPrice = data.currentPrice; // Use the historical price as the purchase unit price
-                    let value = transaction.amount * unitPrice;
+                    let currentPrice = data.currentPrice;
+                    let value = transaction.amount * currentPrice;
                     totalPortfolioValue += value;
 
                     // Ensure the transaction is only added once
-                    addTransactionToTable(transaction.ticker, transaction.purchase_date, transaction.amount, unitPrice, value);
+                    addTransactionToTable(transaction.ticker, transaction.purchase_date, transaction.amount, value);
                 });
             });
 

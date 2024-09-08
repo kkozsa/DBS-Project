@@ -190,13 +190,14 @@ $('#add-transaction-form').submit(function (e) {
 });
 
 // Function to add a transaction to the table
-function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
-    // DOUBLE TRANSACTION FIX Check if transaction with the same ticker and date already exists
+function addTransactionToTable(ticker, purchaseDate, amount, value = 0, unitPrice = 0) {
+    // Check if transaction with the same ticker and date already exists
     if ($(`#transaction-list tr:contains(${ticker}):contains(${purchaseDate})`).length === 0) {
         $('#transaction-list').append(`
             <tr>
                 <td>${ticker}</td>
                 <td>${purchaseDate}</td>
+                <td>${unitPrice.toFixed(2)}</td> <!-- Unit Price Column -->
                 <td>${amount}</td>
                 <td>${value.toFixed(2)}</td>
                 <td><button class="btn btn-danger btn-sm remove-transaction-btn">Remove</button></td>
@@ -207,9 +208,7 @@ function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
 
 // Fetch and display transactions on page load
 $(document).ready(function () {
-    // Clear the transaction list before appending new transactions to avoid duplication
-    $('#transaction-list').empty();
-    console.log("Fetching transactions...");
+    $('#transaction-list').empty(); // Clear the transaction list before appending new transactions to avoid duplication
 
     fetch('/get_transactions')
         .then(response => response.json())
@@ -223,18 +222,27 @@ $(document).ready(function () {
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json'
                 }).then(data => {
-                    let currentPrice = data.currentPrice;
-                    let value = transaction.amount * currentPrice;
-                    totalPortfolioValue += value;
-
-                    // Ensure the transaction is only added once
-                    addTransactionToTable(transaction.ticker, transaction.purchase_date, transaction.amount, value);
+                    let purchaseDate = transaction.purchase_date;
+                    let amount = transaction.amount;
+                    
+                    // Fetch historical price for the purchase date from Yahoo Finance
+                    return $.ajax({
+                        url: '/get_historical_price', // You need to create this route in Flask
+                        type: 'POST',
+                        data: JSON.stringify({ 'ticker': transaction.ticker, 'purchase_date': purchaseDate }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json'
+                    }).then(priceData => {
+                        let unitPrice = priceData.unitPrice; // This will be the price on the purchase date
+                        let value = amount * unitPrice;
+                        totalPortfolioValue += value;
+                        addTransactionToTable(transaction.ticker, purchaseDate, amount, value, unitPrice);
+                    });
                 });
             });
 
             Promise.all(promises).then(() => {
                 $('#portfolio-value').text(`$${totalPortfolioValue.toFixed(2)}`);
-                console.log("Transactions loaded successfully.");
             });
         });
 });

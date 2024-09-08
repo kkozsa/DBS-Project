@@ -1,6 +1,6 @@
 import yfinance as yf
 import mysql.connector
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -291,6 +291,27 @@ def get_transactions():
 
     result = [{'ticker': t[0], 'purchase_date': t[1].strftime('%Y-%m-%d'), 'amount': t[2]} for t in transactions]
     return jsonify(result)
+
+
+@app.route('/get_historical_price', methods=['POST'])
+def get_historical_price():
+    content = request.json
+    ticker = content.get('ticker')
+    purchase_date = content.get('purchase_date')
+
+    # Convert purchase_date to a format that Yahoo Finance understands
+    date = datetime.strptime(purchase_date, '%Y-%m-%d')
+
+    # Fetch the historical data from Yahoo Finance
+    stock = yf.Ticker(ticker)
+    history = stock.history(start=date, end=date + timedelta(days=1))  # Fetch data for the specific day
+
+    if not history.empty:
+        unit_price = history.iloc[0]['Close']  # Get the closing price
+    else:
+        unit_price = 0  # Default to 0 if no data is found
+
+    return jsonify({'unitPrice': unit_price})
 
 
 

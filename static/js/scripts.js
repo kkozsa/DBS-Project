@@ -246,3 +246,31 @@ $(document).ready(function () {
             });
         });
 });
+
+// Handle remove transaction button click
+$(document).on('click', '.remove-transaction-btn', function () {
+    var row = $(this).closest('tr'); // Get the row of the transaction
+    var ticker = row.find('td:nth-child(1)').text(); // Get the ticker from the first column
+    var purchaseDate = row.find('td:nth-child(2)').text(); // Get the purchase date from the second column
+
+    // Ask for confirmation before removing the transaction
+    if (confirm('Are you sure you want to remove this transaction?')) {
+        fetch('/remove_transaction', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'ticker': ticker, 'purchase_date': purchaseDate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === 'success') {
+                row.remove(); // Remove the transaction row from the table
+            } else {
+                alert('Failed to remove transaction');
+            }
+        })
+        .catch(() => alert('Failed to remove transaction'));
+    }
+});

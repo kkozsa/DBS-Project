@@ -314,6 +314,29 @@ def get_historical_price():
     return jsonify({'unitPrice': unit_price})
 
 
+# Route to remove transaction from the database
+@app.route('/remove_transaction', methods=['POST'])
+def remove_transaction():
+    if 'email' not in session:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    email = session['email']
+    content = request.json
+    ticker = content.get('ticker')
+    purchase_date = content.get('purchase_date')
+
+    cursor = mysql_conn.cursor()
+    cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
+    userid = cursor.fetchone()[0]
+
+    # Delete the transaction from the database
+    cursor.execute("DELETE FROM transactions WHERE userid = %s AND ticker = %s AND purchase_date = %s", 
+                   (userid, ticker, purchase_date))
+    mysql_conn.commit()
+    cursor.close()
+
+    return jsonify({'result': 'success'})
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

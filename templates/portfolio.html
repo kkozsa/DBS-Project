@@ -47,12 +47,15 @@
                     </nav>
                     
                     <!-- Total Portfolio Value -->
+                    <br>  
                     <div class="row mb-4">
                         <div class="col-md-12">
+                            <h2 class="text-center">Portfolio value: <span id="portfolio-total">${{ total_portfolio_value | round(2) }}</span></h3>                         
+                            <!-- Add Portfolio Value display below Total invested -->  
+                                                    
                             <h2 class="text-center">Total invested: <span id="portfolio-value">$0.00</span></h2>
                         </div>
                     </div>
-                    <br>
 
                     <!-- Total Stocks Section -->
                     <div class="container-fluid">
@@ -62,7 +65,7 @@
                                     <thead>
                                         <tr>
                                             <th>Stock Ticker</th>
-                                            <th>Purchase Date</th> <!-- New column for Purchase Date -->
+                                            <th>Purchase Date</th> 
                                             <th>Amount</th>
                                             <th>Invested Value</th>
                                             <th>Total Value</th>
@@ -70,11 +73,11 @@
                                         </tr>
                                     </thead>
                                     <tbody id="portfolio-list">
-                                        <!-- Assuming the data is passed from backend -->
+                                        <!-- Data is passed from backend -->
                                         {% for stock in total_stock_values %}
                                         <tr>
                                             <td>{{ stock.ticker }}</td>
-                                            <td>{{ stock.purchase_date }}</td> <!-- Display Purchase Date -->
+                                            <td>{{ stock.purchase_date }}</td> 
                                             <td>{{ stock.total_amount }}</td>
                                             <td>${{ stock.invested_value | round(2) }}</td>
                                             <td>${{ stock.total_value | round(2) }}</td>
@@ -93,9 +96,11 @@
                         </div>
                     </div>
         
-                    <!-- Form to add a new ticker manually -->
+                    <!-- Watchlist add a new ticker manually -->
+                    <br>
                     <div class="col-md-12">
                         <h2>Your watchlist:</h2>
+                        <br>
                         <form id="add-ticker-form2">
                             <input type="text" id="new-ticker2" name="ticker" placeholder="Add ticker" required>
                             <button type="submit">Add</button>

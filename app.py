@@ -76,6 +76,7 @@ def portfolio():
     cursor.close()
 
     total_stock_values = []
+    total_portfolio_value = 0                                   # Variable to store the sum of the total value
     for transaction in transactions:
         ticker = transaction[0]
         purchase_date = transaction[1]
@@ -102,7 +103,10 @@ def portfolio():
             'profit_loss': profit_loss
         })
 
-    return render_template('portfolio.html', total_stock_values=total_stock_values)
+        total_portfolio_value += current_value  # Add current value to the total portfolio value
+
+    return render_template('portfolio.html', total_stock_values=total_stock_values, total_portfolio_value=total_portfolio_value)
+
 
 
 

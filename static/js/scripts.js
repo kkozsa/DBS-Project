@@ -191,7 +191,7 @@ $('#add-transaction-form').submit(function (e) {
 
 // Function to add a transaction to the table
 function addTransactionToTable(ticker, purchaseDate, amount, value = 0) {
-    // DOUBLE TRANSACTION FIX
+    // DOUBLE TRANSACTION FIX Check if transaction with the same ticker and date already exists
     if ($(`#transaction-list tr:contains(${ticker}):contains(${purchaseDate})`).length === 0) {
         $('#transaction-list').append(`
             <tr>

@@ -58,40 +58,53 @@ def login():
 
 # Portfolio route
 
-@app.route('/portfolio', methods=['GET', 'POST'])                   
+@app.route('/portfolio', methods=['GET'])
 def portfolio():
-    if 'email' not in session:                      # Check if the user is logged in
+    if 'email' not in session:
         return redirect(url_for('login'))
-
-    if request.method == 'POST':
-                                                            # Get userid from the da based session email
-        email = session['email']                            # Identify user by email
-        cursor = mysql_conn.cursor()
-        cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
-        userid = cursor.fetchone()[0]                       # userid first column
-        cursor.close()
-        content = request.json
-        ticker = content.get('ticker')                                              # Get ticker from the form
-
-                                                                                        # Insert ticker into user_portfolio table
-        cursor = mysql_conn.cursor()
-        cursor.execute("INSERT INTO user_portfolio (userid, ticker) VALUES (%s, %s)", (userid, ticker))
-        mysql_conn.commit()
-        cursor.close()
-        whatever={"result":"success"}
-        return jsonify(whatever)
 
     email = session['email']
     cursor = mysql_conn.cursor()
     cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
-    userid = cursor.fetchone()[0]  
-
-    cursor = mysql_conn.cursor()
-    cursor.execute("SELECT ticker FROM user_portfolio WHERE userid = %s", (userid,))
-    user_tickers = cursor.fetchall()
+    userid = cursor.fetchone()[0]
     cursor.close()
-    print (user_tickers)
-    return render_template('portfolio.html', userid=userid, user_tickers=user_tickers)
+
+    # Fetch all transactions for the user
+    cursor = mysql_conn.cursor()
+    cursor.execute("SELECT ticker, purchase_date, amount FROM transactions WHERE userid = %s", (userid,))
+    transactions = cursor.fetchall()
+    cursor.close()
+
+    total_stock_values = []
+    for transaction in transactions:
+        ticker = transaction[0]
+        purchase_date = transaction[1]
+        amount = transaction[2]
+
+        # Fetch the historical price at the purchase date
+        stock = yf.Ticker(ticker)
+        history = stock.history(start=purchase_date, end=purchase_date + timedelta(days=1))
+        invested_value = float(amount) * history.iloc[0]['Close'] if not history.empty else 0
+
+        # Fetch the current stock price
+        current_data = stock.history(period="1d")
+        current_value = float(amount) * current_data.iloc[-1]['Close'] if not current_data.empty else 0
+
+        # Calculate profit/loss
+        profit_loss = current_value - invested_value
+
+        total_stock_values.append({
+            'ticker': ticker,
+            'purchase_date': purchase_date.strftime('%Y-%m-%d'),
+            'total_amount': amount,
+            'invested_value': invested_value,
+            'total_value': current_value,
+            'profit_loss': profit_loss
+        })
+
+    return render_template('portfolio.html', total_stock_values=total_stock_values)
+
+
 
 
 # Tickers route (tickers to database)

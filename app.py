@@ -75,15 +75,17 @@ def portfolio():
     transactions = cursor.fetchall()
     cursor.close()
 
-    total_stock_values = []
-    total_portfolio_value = 0                                   # Variable to store the sum of the total value
+    portfolio_summary = {}
+    total_portfolio_value = 0
+    total_invested_value = 0  # Total invested value for all stocks
+
     for transaction in transactions:
         ticker = transaction[0]
-        purchase_date = transaction[1]
         amount = transaction[2]
 
-        # Fetch the historical price at the purchase date
+        # Fetch historical price at the purchase date
         stock = yf.Ticker(ticker)
+        purchase_date = transaction[1]
         history = stock.history(start=purchase_date, end=purchase_date + timedelta(days=1))
         invested_value = float(amount) * history.iloc[0]['Close'] if not history.empty else 0
 
@@ -94,20 +96,28 @@ def portfolio():
         # Calculate profit/loss
         profit_loss = current_value - invested_value
 
-        total_stock_values.append({
-            'ticker': ticker,
-            'purchase_date': purchase_date.strftime('%Y-%m-%d'),
-            'total_amount': amount,
-            'invested_value': invested_value,
-            'total_value': current_value,
-            'profit_loss': profit_loss
-        })
+        # Sum transactions for the same ticker
+        if ticker in portfolio_summary:
+            portfolio_summary[ticker]['total_amount'] += amount
+            portfolio_summary[ticker]['invested_value'] += invested_value
+            portfolio_summary[ticker]['total_value'] += current_value
+            portfolio_summary[ticker]['profit_loss'] += profit_loss
+        else:
+            portfolio_summary[ticker] = {
+                'ticker': ticker,
+                'total_amount': amount,
+                'invested_value': invested_value,
+                'total_value': current_value,
+                'profit_loss': profit_loss
+            }
 
-        total_portfolio_value += current_value  # Add current value to the total portfolio value
+        # Add to the overall totals
+        total_portfolio_value += current_value
+        total_invested_value += invested_value  # Add to total invested value
 
-    return render_template('portfolio.html', total_stock_values=total_stock_values, total_portfolio_value=total_portfolio_value)
+    total_stock_values = list(portfolio_summary.values())
 
-
+    return render_template('portfolio.html', total_stock_values=total_stock_values, total_portfolio_value=total_portfolio_value, total_invested_value=total_invested_value)
 
 
 

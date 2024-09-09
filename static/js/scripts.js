@@ -190,16 +190,19 @@ $('#add-transaction-form').submit(function (e) {
 });
 
 // Function to add a transaction to the table
-function addTransactionToTable(ticker, purchaseDate, amount, value = 0, unitPrice = 0) {
+function addTransactionToTable(ticker, purchaseDate, amount, investedValue, totalValue, profitLoss) {
     // Check if transaction with the same ticker and date already exists
     if ($(`#transaction-list tr:contains(${ticker}):contains(${purchaseDate})`).length === 0) {
         $('#transaction-list').append(`
             <tr>
                 <td>${ticker}</td>
                 <td>${purchaseDate}</td>
-                <td>${unitPrice.toFixed(2)}</td> <!-- Unit Price Column -->
                 <td>${amount}</td>
-                <td>${value.toFixed(2)}</td>
+                <td>${investedValue.toFixed(2)}</td>
+                <td>${totalValue.toFixed(2)}</td>
+                <td>
+                    ${profitLoss >= 0 ? `<span class="text-success">${profitLoss.toFixed(2)}</span>` : `<span class="text-danger">${profitLoss.toFixed(2)}</span>`}
+                </td>
                 <td><button class="btn btn-danger btn-sm remove-transaction-btn">Remove</button></td>
             </tr>
         `);
@@ -210,10 +213,12 @@ function addTransactionToTable(ticker, purchaseDate, amount, value = 0, unitPric
 $(document).ready(function () {
     $('#transaction-list').empty(); // Clear the transaction list before appending new transactions to avoid duplication
 
+    let totalInvestedValue = 0;
+    let totalPortfolioValue = 0;
+
     fetch('/get_transactions')
         .then(response => response.json())
         .then(transactions => {
-            let totalPortfolioValue = 0;
             let promises = transactions.map(transaction => {
                 return $.ajax({
                     url: '/get_stock_data',
@@ -224,25 +229,33 @@ $(document).ready(function () {
                 }).then(data => {
                     let purchaseDate = transaction.purchase_date;
                     let amount = transaction.amount;
-                    
-                    // Fetch historical price for the purchase date from Yahoo Finance
+
+                    // Fetch historical price for the purchase date
                     return $.ajax({
-                        url: '/get_historical_price', // You need to create this route in Flask
+                        url: '/get_historical_price',
                         type: 'POST',
                         data: JSON.stringify({ 'ticker': transaction.ticker, 'purchase_date': purchaseDate }),
                         contentType: 'application/json; charset=utf-8',
                         dataType: 'json'
                     }).then(priceData => {
-                        let unitPrice = priceData.unitPrice; // This will be the price on the purchase date
-                        let value = amount * unitPrice;
-                        totalPortfolioValue += value;
-                        addTransactionToTable(transaction.ticker, purchaseDate, amount, value, unitPrice);
+                        let investedValue = amount * priceData.unitPrice;
+                        let totalValue = amount * data.currentPrice;
+                        let profitLoss = totalValue - investedValue;
+
+                        // Add to the overall totals
+                        totalInvestedValue += investedValue;
+                        totalPortfolioValue += totalValue;
+
+                        // Add transaction row to the table
+                        addTransactionToTable(transaction.ticker, purchaseDate, amount, investedValue, totalValue, profitLoss);
                     });
                 });
             });
 
+                        // After all promises resolve, update the portfolio and invested totals
             Promise.all(promises).then(() => {
-                $('#portfolio-value').text(`$${totalPortfolioValue.toFixed(2)}`);
+                $('#portfolio-total').text(`$${totalPortfolioValue.toFixed(2)}`);
+                $('#portfolio-invested').text(`$${totalInvestedValue.toFixed(2)}`);
             });
         });
 });

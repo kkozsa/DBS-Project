@@ -50,49 +50,43 @@
                     <br>  
                     <div class="row mb-4">
                         <div class="col-md-12">
-                            <h2 class="text-center">Portfolio value: <span id="portfolio-total">${{ total_portfolio_value | round(2) }}</span></h3>                         
-                            <!-- Add Portfolio Value display below Total invested -->  
-                                                    
-                            <h2 class="text-center">Total invested: <span id="portfolio-value">$0.00</span></h2>
+                            <h2 class="text-center">Portfolio value: <span id="portfolio-total">${{ total_portfolio_value | round(2) }}</span></h2>
+                            <h2 class="text-center">Total invested: <span id="portfolio-invested">${{ total_invested_value | round(2) }}</span></h2>
                         </div>
                     </div>
 
                     <!-- Total Stocks Section -->
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Stock Ticker</th>
-                                            <th>Purchase Date</th> 
-                                            <th>Amount</th>
-                                            <th>Invested Value</th>
-                                            <th>Total Value</th>
-                                            <th>Profit/Loss</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="portfolio-list">
-                                        <!-- Data is passed from backend -->
-                                        {% for stock in total_stock_values %}
-                                        <tr>
-                                            <td>{{ stock.ticker }}</td>
-                                            <td>{{ stock.purchase_date }}</td> 
-                                            <td>{{ stock.total_amount }}</td>
-                                            <td>${{ stock.invested_value | round(2) }}</td>
-                                            <td>${{ stock.total_value | round(2) }}</td>
-                                            <td>
-                                                {% if stock.profit_loss >= 0 %}
-                                                    <span class="text-success">${{ stock.profit_loss | round(2) }}</span>
-                                                {% else %}
-                                                    <span class="text-danger">${{ stock.profit_loss | round(2) }}</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Stock Ticker</th>
+                                        <th>Amount</th>
+                                        <th>Invested Value</th>
+                                        <th>Total Value</th>
+                                        <th>Profit/Loss</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="portfolio-list">
+                                    <!-- Data is passed from backend -->
+                                    {% for stock in total_stock_values %}
+                                    <tr>
+                                        <td>{{ stock.ticker }}</td>
+                                        <td>{{ stock.total_amount }}</td>
+                                        <td>${{ stock.invested_value | round(2) }}</td>
+                                        <td>${{ stock.total_value | round(2) }}</td>
+                                        <td>
+                                            {% if stock.profit_loss >= 0 %}
+                                                <span class="text-success">${{ stock.profit_loss | round(2) }}</span>
+                                            {% else %}
+                                                <span class="text-danger">${{ stock.profit_loss | round(2) }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
         

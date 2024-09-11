@@ -191,7 +191,6 @@ $('#add-transaction-form').submit(function (e) {
 
 // Function to add a transaction to the table
 function addTransactionToTable(ticker, purchaseDate, amount, investedValue, totalValue, profitLoss) {
-    // Check if transaction with the same ticker and date already exists
     if ($(`#transaction-list tr:contains(${ticker}):contains(${purchaseDate})`).length === 0) {
         $('#transaction-list').append(`
             <tr>
@@ -252,19 +251,22 @@ $(document).ready(function () {
                 });
             });
 
-                        // After all promises resolve, update the portfolio and invested totals
+            // After all promises resolve, update the portfolio and invested totals
             Promise.all(promises).then(() => {
                 $('#portfolio-total').text(`$${totalPortfolioValue.toFixed(2)}`);
                 $('#portfolio-invested').text(`$${totalInvestedValue.toFixed(2)}`);
+
+                // Call to update the portfolio value chart
+                updatePortfolioChart(transactions);
             });
         });
 });
 
 // Handle remove transaction button click
 $(document).on('click', '.remove-transaction-btn', function () {
-    var row = $(this).closest('tr'); // Get the row of the transaction
-    var ticker = row.find('td:nth-child(1)').text(); // Get the ticker from the first column
-    var purchaseDate = row.find('td:nth-child(2)').text(); // Get the purchase date from the second column
+    var row = $(this).closest('tr');
+    var ticker = row.find('td:nth-child(1)').text();
+    var purchaseDate = row.find('td:nth-child(2)').text();
 
     // Ask for confirmation before removing the transaction
     if (confirm('Are you sure you want to remove this transaction?')) {
@@ -279,7 +281,7 @@ $(document).on('click', '.remove-transaction-btn', function () {
         .then(response => response.json())
         .then(data => {
             if (data.result === 'success') {
-                row.remove(); // Remove the transaction row from the table
+                row.remove();
             } else {
                 alert('Failed to remove transaction');
             }
@@ -287,3 +289,69 @@ $(document).on('click', '.remove-transaction-btn', function () {
         .catch(() => alert('Failed to remove transaction'));
     }
 });
+
+// Total investment over time Chart.js
+function updatePortfolioChart(transactions) {
+    const ctx = document.getElementById('portfolio-chart').getContext('2d');
+    let labels = [];
+    let portfolioValues = [];
+    let cumulativePortfolioValue = 0; // Keep track of the cumulative portfolio value
+
+                                        // Fetch historical data for each transaction
+    let promises = transactions.map(transaction => {
+        return $.ajax({
+            url: '/get_historical_price',
+            type: 'POST',
+            data: JSON.stringify({ 'ticker': transaction.ticker, 'purchase_date': transaction.purchase_date }),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json'
+        }).then(priceData => {
+            let investedValue = transaction.amount * priceData.unitPrice;
+            let currentDate = new Date(transaction.purchase_date).toISOString().split('T')[0];
+
+            return { date: currentDate, value: investedValue };
+        });
+    });
+
+                            // After all promises are resolved, update the chart
+    Promise.all(promises).then(results => {
+                            // Sort results by date in asc. order
+        results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                            // Add sorted data to labels and values, and calculate cumulative portfolio value
+        results.forEach(result => {
+            labels.push(result.date);
+            cumulativePortfolioValue += result.value;                       // Accumulate the portfolio value over time
+            portfolioValues.push(cumulativePortfolioValue);                 // Push the cumulative value
+        });
+
+        const portfolioChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Invested',
+                    data: portfolioValues,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Portfolio Value ($)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+}

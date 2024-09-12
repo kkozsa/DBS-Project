@@ -295,42 +295,45 @@ function updatePortfolioChart(transactions) {
     const ctx = document.getElementById('portfolio-chart').getContext('2d');
     let labels = [];
     let portfolioValues = [];
-    let cumulativePortfolioValue = 0; // Keep track of the cumulative portfolio value
+    let cumulativePortfolioValue = 0; // Track the portfolio value over time
 
-                                        // Fetch historical data for each transaction
+                                        // Fetch current data for each transaction (stock)
     let promises = transactions.map(transaction => {
         return $.ajax({
-            url: '/get_historical_price',
+            url: '/get_stock_data',  // Use the current price for the portfolio value calculation
             type: 'POST',
-            data: JSON.stringify({ 'ticker': transaction.ticker, 'purchase_date': transaction.purchase_date }),
+            data: JSON.stringify({ 'ticker': transaction.ticker }),
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
-        }).then(priceData => {
-            let investedValue = transaction.amount * priceData.unitPrice;
+        }).then(data => {
+            let currentPrice = data.currentPrice;
+            let amount = transaction.amount;
+            let totalValue = amount * currentPrice; // Calculate the value based on current price
             let currentDate = new Date(transaction.purchase_date).toISOString().split('T')[0];
 
-            return { date: currentDate, value: investedValue };
+            return { date: currentDate, value: totalValue };
         });
     });
 
-                            // After all promises are resolved, update the chart
+                            // After all promises resolve, update the chart
     Promise.all(promises).then(results => {
-                            // Sort results by date in asc. order
+                            // Sort results by date in ascending order
         results.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-                            // Add sorted data to labels and values, and calculate cumulative portfolio value
+                                // Add sorted data to labels and values, and calculate cumulative portfolio value
         results.forEach(result => {
             labels.push(result.date);
             cumulativePortfolioValue += result.value;                       // Accumulate the portfolio value over time
             portfolioValues.push(cumulativePortfolioValue);                 // Push the cumulative value
         });
 
+        // Create the chart
         const portfolioChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Total Invested',
+                    label: 'Portfolio Value',
                     data: portfolioValues,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     fill: false

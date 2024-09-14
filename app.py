@@ -123,7 +123,7 @@ def portfolio():
 
 # Tickers route (tickers to database)
 
-@app.route('/tickers', methods=['GET'])                                                 
+@app.route('/tickers', methods=['GET', 'POST'])
 def tickers():
     email = session['email']
     
@@ -131,19 +131,36 @@ def tickers():
     if not mysql_conn.is_connected():
         mysql_conn.reconnect(attempts=3, delay=5)
 
-    cursor = mysql_conn.cursor()
-    cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
-    userid = cursor.fetchone()[0]  
+    if request.method == 'GET':
+        # Fetch tickers for the user
+        cursor = mysql_conn.cursor()
+        cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
+        userid = cursor.fetchone()[0]  
+        cursor.close()
 
-    cursor.close()  # Close the first cursor
+        cursor = mysql_conn.cursor()
+        cursor.execute("SELECT ticker FROM user_portfolio WHERE userid = %s", (userid,))
+        user_tickers = cursor.fetchall()
+        cursor.close()
 
-    cursor = mysql_conn.cursor()
-    cursor.execute("SELECT ticker FROM user_portfolio WHERE userid = %s", (userid,))
-    user_tickers = cursor.fetchall()
-    cursor.close()  # Close the second cursor
+        whatever = {'tickers': [ticker[0] for ticker in user_tickers]}
+        return jsonify(whatever)
     
-    whatever = {'tickers': [ticker[0] for ticker in user_tickers]}
-    return jsonify(whatever)
+    elif request.method == 'POST':
+        # Add a new ticker to the user's portfolio
+        content = request.json
+        new_ticker = content.get('ticker')
+
+        cursor = mysql_conn.cursor()
+        cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))
+        userid = cursor.fetchone()[0]
+
+        # Insert the new ticker into the user's portfolio
+        cursor.execute("INSERT INTO user_portfolio (userid, ticker) VALUES (%s, %s)", (userid, new_ticker))
+        mysql_conn.commit()
+        cursor.close()
+
+        return jsonify({'result': 'success'})
 
 
 # Remove tickers route (Remove tickers from database)
@@ -329,7 +346,7 @@ def get_historical_price():
     # Convert purchase_date to a format that Yahoo Finance understands
     date = datetime.strptime(purchase_date, '%Y-%m-%d')
 
-    # Fetch the historical data from Yahoo Finance
+        # Fetch the historical data from Yahoo Finance
     stock = yf.Ticker(ticker)
     history = stock.history(start=date, end=date + timedelta(days=1))  # Fetch data for the specific day
 

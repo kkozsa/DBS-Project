@@ -66,7 +66,7 @@ $(document).ready(function () {
     let addLiveTicker = (newTicker2) => {                  
         if (!tickers.includes(newTicker2)) {
             tickers.push(newTicker2);
-            fetch('/portfolio', {
+            fetch('/tickers', { // Point to /tickers route
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
@@ -75,10 +75,16 @@ $(document).ready(function () {
                 body: JSON.stringify({ ticker: newTicker2 })
             })
             .then(response => response.json())
-            .then(data => {})
-            .catch(() => alert("Test alert"));                               
-            localStorage.setItem('tickers', JSON.stringify(tickers));
-            addTickerToGrid2(newTicker2);            
+            .then(data => {
+                if (data.result === 'success') {
+                    localStorage.setItem('tickers', JSON.stringify(tickers));
+                    addTickerToGrid2(newTicker2); 
+                    updatePrices();  // Call updatePrices after adding
+                } else {
+                    alert('Failed to add ticker');
+                }
+            })
+            .catch(() => alert("Failed to add ticker"));                               
         }
     };
 

@@ -115,10 +115,25 @@ def portfolio():
         total_portfolio_value += current_value
         total_invested_value += invested_value  # Add to total invested value
 
+    # Calculate Capital Gains Tax (CGT)
+    total_profit = total_portfolio_value - total_invested_value
+
+    cgt_threshold = 1270  # Irish CGT exemption
+    cgt_rate = 0.33  # Irish CGT rate
+
+    if total_profit > cgt_threshold:
+        taxable_profit = total_profit - cgt_threshold
+        capital_gains_tax = taxable_profit * cgt_rate
+    else:
+        capital_gains_tax = 0  # No tax if profit is below the exemption threshold
+
     total_stock_values = list(portfolio_summary.values())
 
-    return render_template('portfolio.html', total_stock_values=total_stock_values, total_portfolio_value=total_portfolio_value, total_invested_value=total_invested_value)
-
+    return render_template('portfolio.html', total_stock_values=total_stock_values,
+                           total_portfolio_value=total_portfolio_value,
+                           total_invested_value=total_invested_value,
+                           total_profit=total_profit,
+                           capital_gains_tax=capital_gains_tax)
 
 
 # Tickers route (tickers to database)

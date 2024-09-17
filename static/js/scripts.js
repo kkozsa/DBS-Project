@@ -18,21 +18,21 @@ function startUpdateCycle() {
     updatePrices();
     setInterval(function () {
         updatePrices();                   
-    }, 60000);
+    }, 60000);                      // Update 1 minute periods
 }
 
 // Index page
 $(document).ready(function () {             
-    tickers.forEach(function (ticker) {
+    tickers.forEach(function (ticker) {         // Loops over array of tickers and adds to grid
         addTickerToGrid(ticker);        
     });
     updatePrices();                         // Call updatePrices
-    startUpdateCycle();                     // Call price update every 60s
+    startUpdateCycle();                     // Call update prices every 60s
 
     $('#add-ticker-form').submit(function (e) {
         e.preventDefault();
         var newTicker = $('#new-ticker').val().toUpperCase();
-        if (!tickers.includes(newTicker)) {
+        if (!tickers.includes(newTicker)) {         // If already in tickers array
             tickers.push(newTicker);
             localStorage.setItem('tickers', JSON.stringify(tickers));
             addTickerToGrid(newTicker);            
@@ -125,7 +125,7 @@ $(document).ready(function () {
 // Index page grid
 function addTickerToGrid(ticker) {
     $('#tickers-grid').append(`<div id="${ticker}" class="stock-box"><h2>${ticker}</h2><p id="${ticker}-price"></p><p id="${ticker}-pct"></p></div>`);
-}                                                           // Function adds ticker box to html grid. ID, name, placeholder for price and % change
+}                                                           // Adds ticker box to html grid. ID, name, placeholder for price and % change
 
 // Portfolio page grid
 function addTickerToGrid2(ticker) {
@@ -134,7 +134,7 @@ function addTickerToGrid2(ticker) {
 
 // Send AJAX request to fetch stock data for tickers. Update price change
 function updatePrices() {
-    tickers.forEach(function (ticker) {
+    tickers.forEach(function (ticker) {         // For each ticker, AJAX req for latest price
         $.ajax({
             url: '/get_stock_data',
             type: 'POST',
@@ -142,9 +142,9 @@ function updatePrices() {
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             success: function (data) {
-                var changePercent = ((data.currentPrice - data.openPrice) / data.openPrice) * 100;
+                var changePercent = ((data.currentPrice - data.openPrice) / data.openPrice) * 100;      // Price change
                 var colorClass;
-                if (changePercent <= -2) {
+                if (changePercent <= -2) {                                  // Color class
                     colorClass = 'dark-red';
                 } else if (changePercent < 0) {
                     colorClass = 'red';
@@ -195,7 +195,7 @@ $('#add-transaction-form').submit(function (e) {
     .catch(() => alert('Failed to add transaction'));
 });
 
-// Function to add a transaction to the table
+// Add a transaction to the table
 function addTransactionToTable(ticker, purchaseDate, amount, investedValue, totalValue, profitLoss) {
     if ($(`#transaction-list tr:contains(${ticker}):contains(${purchaseDate})`).length === 0) {
         $('#transaction-list').append(`

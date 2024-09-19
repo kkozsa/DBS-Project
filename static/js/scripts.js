@@ -32,7 +32,7 @@ $(document).ready(function () {
     $('#add-ticker-form').submit(function (e) {
         e.preventDefault();
         var newTicker = $('#new-ticker').val().toUpperCase();
-        if (!tickers.includes(newTicker)) {         // If already in tickers array
+        if (!tickers.includes(newTicker)) {         // If not already in tickers array
             tickers.push(newTicker);
             localStorage.setItem('tickers', JSON.stringify(tickers));
             addTickerToGrid(newTicker);            
@@ -89,36 +89,36 @@ $(document).ready(function () {
     };
 
     let addLiveTicker1 = (newTicker2) => {
-        if (!tickers.includes(newTicker2)) {
-            tickers.push(newTicker2);
-            localStorage.setItem('tickers', JSON.stringify(tickers));
+        if (!tickers.includes(newTicker2)) {                // If ticker not already in array
+            tickers.push(newTicker2);       
+            localStorage.setItem('tickers', JSON.stringify(tickers));       // Save browser localStorage
             addTickerToGrid2(newTicker2);
             updatePrices();
         }
     };
-
-    $('#tickers-grid2').on('click', '.remove-btn', function () {         
-        var tickerToRemove = $(this).data('ticker');                    
-        tickers = tickers.filter(t => t !== tickerToRemove);              
+    // Remove ticker from portfolio
+    $('#tickers-grid2').on('click', '.remove-btn', function () {         // Container for tickers
+        var tickerToRemove = $(this).data('ticker');                     // this - button clicked
+        tickers = tickers.filter(t => t !== tickerToRemove);             // New filtered array without the clicked 
         
-        fetch('/remove_ticker', {
+        fetch('/remove_ticker', {                           // Sends HTTP post request
             method: 'POST',
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Accept': 'application/json',               // Client expects JSON response
+                'Content-Type': 'application/json'          
             },
-            body: JSON.stringify({ ticker: tickerToRemove })
+            body: JSON.stringify({ ticker: tickerToRemove })    // Sends ticker to be removed
         })
-        .then(response => response.json())
+        .then(response => response.json())          // Parse JSON response from server
         .then(data => {
             if (data.result === 'success') {
-                localStorage.setItem('tickers', JSON.stringify(tickers));
-                $(`#${tickerToRemove}`).remove();
+                localStorage.setItem('tickers', JSON.stringify(tickers));       //Updated array without removed ticker
+                $(`#${tickerToRemove}`).remove();                               // HTML element removed using jquery
             } else {
-                alert('Failed to remove ticker');
+                alert('Failed to remove ticker');           // Unsuccessfully removed ticker
             }
         })
-        .catch(() => alert('Failed to remove ticker'));
+        .catch(() => alert('Failed to remove ticker'));     // Error fetch request. Network error.
     });
 });
 
@@ -127,10 +127,16 @@ function addTickerToGrid(ticker) {
     $('#tickers-grid').append(`<div id="${ticker}" class="stock-box"><h2>${ticker}</h2><p id="${ticker}-price"></p><p id="${ticker}-pct"></p></div>`);
 }                                                           // Adds ticker box to html grid. ID, name, placeholder for price and % change
 
-// Portfolio page grid
-function addTickerToGrid2(ticker) {
-    $('#tickers-grid2').append(`<div id="${ticker}" class="stock-box"><h2>${ticker}</h2><p id="${ticker}-price"></p><p id="${ticker}-pct"></p><button class="remove-btn" data-ticker="${ticker}">Remove</button></div>`);
-}                                                           // Same as above + remove button
+// Add ticker to Portfolio
+function addTickerToGrid2(ticker) {                 // Add ticker to #tickers-grid2
+    $('#tickers-grid2').append(`                    
+        <div id="${ticker}" class="stock-box">      
+            <h2>${ticker}</h2>
+            <p id="${ticker}-price"></p>
+            <p id="${ticker}-pct"></p>
+            <button class="remove-btn" data-ticker="${ticker}">Remove</button>
+        </div>`);                                           // Add div ticker to #tickers-grid2 container. Ticker, price, percent change
+}                                                            
 
 // Send AJAX request to fetch stock data for tickers. Update price change
 function updatePrices() {
@@ -235,7 +241,7 @@ $(document).ready(function () {
                     let purchaseDate = transaction.purchase_date;
                     let amount = transaction.amount;
 
-                    // Fetch historical price for the purchase date
+                                        // Fetch historical price for the purchase date
                     return $.ajax({
                         url: '/get_historical_price',
                         type: 'POST',
@@ -247,22 +253,22 @@ $(document).ready(function () {
                         let totalValue = amount * data.currentPrice;
                         let profitLoss = totalValue - investedValue;
 
-                        // Add to the overall totals
+                                        // Add to the overall totals
                         totalInvestedValue += investedValue;
                         totalPortfolioValue += totalValue;
 
-                        // Add transaction row to the table
+                                        // Add transaction row to the table
                         addTransactionToTable(transaction.ticker, purchaseDate, amount, investedValue, totalValue, profitLoss);
                     });
                 });
             });
 
-            // After all promises resolve, update the portfolio and invested totals
+                                        // After all promises resolve, update portfolio and invested totals
             Promise.all(promises).then(() => {
                 $('#portfolio-total').text(`$${totalPortfolioValue.toFixed(2)}`);
                 $('#portfolio-invested').text(`$${totalInvestedValue.toFixed(2)}`);
 
-                // Call to update the portfolio value chart
+                                        // Call to update the portfolio value chart
                 updatePortfolioChart(transactions);
             });
         });
@@ -274,7 +280,7 @@ $(document).on('click', '.remove-transaction-btn', function () {
     var ticker = row.find('td:nth-child(1)').text();
     var purchaseDate = row.find('td:nth-child(2)').text();
 
-    // Ask for confirmation before removing the transaction
+                            // Ask for confirmation before removing the transaction
     if (confirm('Are you sure you want to remove this transaction?')) {
         fetch('/remove_transaction', {
             method: 'POST',
@@ -301,12 +307,12 @@ function updatePortfolioChart(transactions) {
     const ctx = document.getElementById('portfolio-chart').getContext('2d');
     let labels = [];
     let portfolioValues = [];
-    let cumulativePortfolioValue = 0; // Track the portfolio value over time
+    let cumulativePortfolioValue = 0;   // Track the portfolio value over time
 
                                         // Fetch current data for each transaction (stock)
     let promises = transactions.map(transaction => {
         return $.ajax({
-            url: '/get_stock_data',  // Use the current price for the portfolio value calculation
+            url: '/get_stock_data',     // Use the current price for the portfolio value calculation
             type: 'POST',
             data: JSON.stringify({ 'ticker': transaction.ticker }),
             contentType: 'application/json; charset=utf-8',
@@ -314,7 +320,7 @@ function updatePortfolioChart(transactions) {
         }).then(data => {
             let currentPrice = data.currentPrice;
             let amount = transaction.amount;
-            let totalValue = amount * currentPrice; // Calculate the value based on current price
+            let totalValue = amount * currentPrice;                 // Calculate the value based on current price
             let currentDate = new Date(transaction.purchase_date).toISOString().split('T')[0];
 
             return { date: currentDate, value: totalValue };
@@ -364,3 +370,5 @@ function updatePortfolioChart(transactions) {
         });
     });
 }
+
+

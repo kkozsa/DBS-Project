@@ -131,10 +131,6 @@ def portfolio():
 def tickers():
     email = session['email']
     
-                                # Reconnect if no connection
-    if not mysql_conn.is_connected():                           #*****************************************************************
-        mysql_conn.reconnect(attempts=3, delay=5)
-
     if request.method == 'GET':
                                 # Fetch tickers for the user
         cursor = mysql_conn.cursor()
@@ -308,9 +304,6 @@ def get_transactions():
         return jsonify({'error': 'Unauthorized'}), 403
 
     email = session['email']                    
-    
-    if not mysql_conn.is_connected():
-        mysql_conn.reconnect(attempts=3, delay=5)
 
     cursor = mysql_conn.cursor()
     cursor.execute("SELECT userid FROM users WHERE email = %s", (email,))       # Query to get userid based on email
@@ -368,7 +361,6 @@ def remove_transaction():
     cursor.close()
 
     return jsonify({'result': 'success'})
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
